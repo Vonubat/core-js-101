@@ -114,35 +114,189 @@ function fromJSON(proto, json) {
  *  For more examples see unit tests.
  */
 
+class Builder {
+  constructor() {
+    this.data = [];
+    this.flagId = false;
+    this.flagElement = false;
+    this.flagPseudoElement = false;
+    this.order = [];
+  }
+
+  element(value) {
+    if (this.flagElement) {
+      throw Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector',
+      );
+    }
+    if (
+      this.order.length !== 0
+    ) {
+      throw Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    this.data.push(value);
+    this.flagElement = true;
+    this.order.push('element');
+    return this;
+  }
+
+  id(value) {
+    if (this.flagId) {
+      throw Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector',
+      );
+    }
+    if (
+      this.order[this.order.length - 1] !== 'element'
+      && this.order.length !== 0
+    ) {
+      throw Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    this.data.push(`#${value}`);
+    this.flagId = true;
+    this.order.push('id');
+    return this;
+  }
+
+  class(value) {
+    if (
+      (this.order[this.order.length - 1] !== 'element'
+        && this.order[this.order.length - 1] !== 'id'
+        && this.order[this.order.length - 1] !== 'class')
+      && this.order.length !== 0
+    ) {
+      throw Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    this.data.push(`.${value}`);
+    this.order.push('class');
+    return this;
+  }
+
+  attr(value) {
+    if (
+      (this.order[this.order.length - 1] !== 'element'
+        && this.order[this.order.length - 1] !== 'id'
+        && this.order[this.order.length - 1] !== 'class'
+        && this.order[this.order.length - 1] !== 'attribute'
+      )
+      && this.order.length !== 0
+    ) {
+      throw Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    this.data.push(`[${value}]`);
+    this.order.push('attribute');
+    return this;
+  }
+
+  pseudoClass(value) {
+    if (
+      (this.order[this.order.length - 1] !== 'element'
+        && this.order[this.order.length - 1] !== 'id'
+        && this.order[this.order.length - 1] !== 'class'
+        && this.order[this.order.length - 1] !== 'attribute'
+        && this.order[this.order.length - 1] !== 'pseudo-class')
+      && this.order.length !== 0
+    ) {
+      throw Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    this.data.push(`:${value}`);
+    this.order.push('pseudo-class');
+    return this;
+  }
+
+  pseudoElement(value) {
+    if (this.flagPseudoElement) {
+      throw Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector',
+      );
+    }
+    if (
+      this.order[this.order.length - 1] !== 'pseudo-class'
+      && this.order.length !== 0
+    ) {
+      throw Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    this.data.push(`::${value}`);
+    this.flagPseudoElement = true;
+    this.order.push('pseudo-element');
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.data.push(selector1.data.join(''));
+    this.data.push(` ${combinator} `);
+    this.data.push(selector2.data.join(''));
+    return this;
+  }
+
+  stringify() {
+    // console.log(this.data.join(''));
+    return this.data.join('');
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    const builder = new Builder();
+    builder.element(value);
+    return builder;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const builder = new Builder();
+    builder.id(value);
+    return builder;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const builder = new Builder();
+    builder.class(value);
+    return builder;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const builder = new Builder();
+    builder.attr(value);
+    return builder;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const builder = new Builder();
+    builder.pseudoClass(value);
+    return builder;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const builder = new Builder();
+    builder.pseudoElement(value);
+    return builder;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const builder = new Builder();
+    builder.combine(selector1, combinator, selector2);
+    return builder;
+  },
+
+  stringify() {
+    const builder = new Builder();
+    builder.stringify();
+    return builder;
   },
 };
+
 
 module.exports = {
   Rectangle,
